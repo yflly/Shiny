@@ -1,64 +1,26 @@
-import { createAction, createReducer } from '@reduxjs/toolkit'
-import { selectSurvey } from '../utils/selectors'
+import { createSlice } from '@reduxjs/toolkit'
 
-const initialState = {
-  status: 'void',
-  data: null,
-  error: null,
-}
+const themeSlice = createSlice({
+  // le nom du slice
+  name: 'theme',
+  // le state initial
+  initialState: 'light',
+  // reducers permet de définir les actions et le reducer
+  reducers: {
+    // l'action toggle ('theme/toggle')
+    toggle: (state) => {
+      return state === 'light' ? 'dark' : 'light'
+    },
+    // l'action set ('theme/set')
+    set: (state, action) => {
+      return action.payload
+    },
+  },
+})
 
-const surveyFetching = createAction('survey/fetching')
-const surveyResolved = createAction('survey/resolved')
-const surveyRejected = createAction('survey/rejected')
-
-export async function fetchOrUpdateSurvey(dispatch, getState) {
-  const status = selectSurvey(getState()).status
-  if (status === 'pending' || status === 'updating') {
-    return
-  }
-  dispatch(surveyFetching())
-  try {
-    const response = await fetch('http://localhost:8000/survey')
-    const data = await response.json()
-    dispatch(surveyResolved(data))
-  } catch (error) {
-    dispatch(surveyRejected(error))
-  }
-}
-
-export default createReducer(initialState, (builder) =>
-  builder
-    .addCase(surveyFetching, (draft, action) => {
-      if (draft.status === 'void') {
-        draft.status = 'pending'
-        return
-      }
-      if (draft.status === 'rejected') {
-        draft.error = null
-        draft.status = 'pending'
-        return
-      }
-      if (draft.status === 'resolved') {
-        draft.status = 'updating'
-        return
-      }
-      return
-    })
-    .addCase(surveyResolved, (draft, action) => {
-      if (draft.status === 'pending' || draft.status === 'updating') {
-        draft.data = action.payload
-        draft.status = 'resolved'
-        return
-      }
-      return
-    })
-    .addCase(surveyRejected, (draft, action) => {
-      if (draft.status === 'pending' || draft.status === 'updating') {
-        draft.error = action.payload
-        draft.data = null
-        draft.status = 'rejected'
-        return
-      }
-      return
-    })
-)
+// on extrait les actions et le reducer
+const { actions, reducer } = themeSlice
+// on export chaque action individuellement
+export const { set, toggle } = actions
+// on export le reducer comme default export
+export default reducer
